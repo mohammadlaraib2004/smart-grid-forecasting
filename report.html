@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Grid Electrical Energy Consumption Demand Forecasting</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.7; color: #1f2328;
+    background: #ffffff;
+  }
+
+  /* ── Cover Page ─────────────────────────────────────────── */
+  .cover {
+    min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; padding: 60px 40px;
+    background: #0f172a;
+    page-break-after: always;
+  }
+  .cover-badge {
+    display: inline-block; background: #3b82f6;
+    color: #fff; font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 6px 20px; border-radius: 20px; margin-bottom: 32px;
+  }
+  .cover h1 {
+    font-size: 2.2rem; font-weight: 800; color: #f1f5f9;
+    line-height: 1.25; max-width: 680px; margin: 0 auto 20px;
+  }
+  .cover h1 span { color: #60a5fa; }
+  .cover .subtitle {
+    font-size: 1rem; color: #94a3b8; max-width: 540px; margin: 0 auto 48px;
+  }
+  .cover-meta {
+    display: flex; flex-direction: column; gap: 10px;
+    font-size: 13px; color: #64748b;
+  }
+  .cover-meta strong { color: #cbd5e1; }
+  .cover-divider {
+    width: 60px; height: 3px; background: #3b82f6;
+    margin: 32px auto;
+  }
+  .cover-stats {
+    display: flex; gap: 40px; justify-content: center;
+    margin-top: 44px; flex-wrap: wrap;
+  }
+  .cover-stat { text-align: center; }
+  .cover-stat .val { font-size: 1.8rem; font-weight: 800; color: #60a5fa; }
+  .cover-stat .lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Document wrapper ────────────────────────────────────── */
+  .doc { max-width: 760px; margin: 0 auto; padding: 60px 40px 80px; }
+
+  /* ── TOC ──────────────────────────────────────────────────── */
+  .toc-page { padding-top: 48px; page-break-after: always; }
+  .toc-title {
+    font-size: 1.4rem; font-weight: 700; color: #1e293b;
+    border-bottom: 2px solid #3b82f6; padding-bottom: 8px;
+    margin-bottom: 28px;
+  }
+  .toc-entry {
+    display: flex; justify-content: space-between;
+    align-items: flex-end; padding: 7px 0;
+    border-bottom: 1px dotted #e2e8f0;
+    font-size: 13.5px; color: #334155;
+  }
+  .toc-entry .toc-num { font-weight: 700; color: #3b82f6; margin-right: 10px; }
+  .toc-entry .toc-pg  { color: #94a3b8; font-size: 12px; white-space: nowrap; }
+  .toc-sub { padding-left: 22px; font-size: 12.5px; color: #64748b; }
+
+  /* ── Sections ────────────────────────────────────────────── */
+  .section { margin-top: 56px; }
+  h2.sec-heading {
+    font-size: 1.25rem; font-weight: 700; color: #1e293b;
+    border-left: 4px solid #3b82f6; padding-left: 12px;
+    margin-bottom: 16px;
+  }
+  h3.sub-heading {
+    font-size: 1rem; font-weight: 600; color: #334155;
+    margin: 24px 0 10px; border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 4px;
+  }
+  p { margin-bottom: 12px; color: #374151; }
+  ul, ol { margin: 8px 0 14px 24px; }
+  li { margin-bottom: 5px; color: #374151; }
+
+  /* ── Info boxes ──────────────────────────────────────────── */
+  .info-box {
+    background: #f0f9ff; border: 1px solid #bae6fd;
+    border-left: 4px solid #0ea5e9;
+    border-radius: 8px; padding: 16px 20px; margin: 18px 0;
+  }
+  .warn-box {
+    background: #fef9ee; border: 1px solid #fde68a;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px; padding: 16px 20px; margin: 18px 0;
+  }
+  .success-box {
+    background: #f0fdf4; border: 1px solid #bbf7d0;
+    border-left: 4px solid #22c55e;
+    border-radius: 8px; padding: 16px 20px; margin: 18px 0;
+  }
+
+  /* ── Tables ──────────────────────────────────────────────── */
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 18px 0; font-size: 13px;
+  }
+  thead th {
+    background: #1e293b; color: #f1f5f9;
+    padding: 10px 12px; text-align: left;
+    font-weight: 600; font-size: 12px;
+  }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid #e5e7eb; color: #374151; }
+  .best { background: #dcfce7 !important; font-weight: 700; color: #166534 !important; }
+
+  /* ── Metric cards ────────────────────────────────────────── */
+  .metric-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+  .metric-card {
+    flex: 1; min-width: 120px;
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 16px 14px; text-align: center;
+  }
+  .metric-card .val { font-size: 1.5rem; font-weight: 800; color: #1e40af; }
+  .metric-card .lbl { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+  /* ── Code blocks ─────────────────────────────────────────── */
+  .code-block {
+    background: #0f172a; color: #e2e8f0;
+    border-radius: 8px; padding: 18px 20px;
+    font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+    font-size: 12.5px; line-height: 1.6; margin: 16px 0;
+    overflow-x: auto; white-space: pre;
+  }
+  .kw  { color: #7dd3fc; }
+  .fn  { color: #a5f3fc; }
+  .cm  { color: #64748b; }
+  .st  { color: #86efac; }
+  .nm  { color: #fde68a; }
+
+  /* ── Bar chart (SVG) ─────────────────────────────────────── */
+  .chart-wrap { margin: 24px 0; }
+  .chart-title { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 10px; }
+  .bar-row { display: flex; align-items: center; margin: 6px 0; gap: 8px; }
+  .bar-label { width: 160px; font-size: 12px; color: #374151; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; background: #e5e7eb; border-radius: 4px; height: 20px; }
+  .bar-fill   { height: 100%; border-radius: 4px; display: flex; align-items: center;
+                padding-left: 8px; font-size: 11px; font-weight: 700; color: #fff; }
+
+  /* ── Workflow steps ──────────────────────────────────────── */
+  .workflow { display: flex; flex-direction: column; gap: 0; margin: 20px 0; }
+  .wf-step {
+    display: flex; gap: 0; align-items: stretch;
+  }
+  .wf-left { display: flex; flex-direction: column; align-items: center; width: 40px; }
+  .wf-dot  {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #3b82f6; color: #fff; font-weight: 700;
+    font-size: 12px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .wf-line { flex: 1; width: 2px; background: #bfdbfe; }
+  .wf-body { flex: 1; padding: 2px 0 20px 12px; }
+  .wf-body strong { display: block; font-size: 13.5px; color: #1e293b; margin-bottom: 3px; }
+  .wf-body p { margin: 0; font-size: 12.5px; color: #64748b; }
+  .wf-step:last-child .wf-line { display: none; }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  .footer {
+    text-align: center; padding: 24px 0; margin-top: 60px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 11px; color: #94a3b8;
+  }
+
+  /* ── Print helpers ───────────────────────────────────────── */
+  @media print {
+    .cover { page-break-after: always; }
+    .section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     COVER PAGE
+════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-badge">Problem 58 · Module 5: Trees, Bayes &amp; Applications</div>
+  <h1>Smart Grid Electrical Energy Consumption<br><span>Demand Forecasting</span></h1>
+  <p class="subtitle">
+    A machine learning pipeline for industrial load forecasting using Decision Tree,
+    Multiple Linear Regression, and K-Nearest Neighbours regressors on the Steel Industry
+    Energy Consumption Dataset.
+  </p>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div><strong>Application Domain:</strong> Power Systems &amp; Industrial Energy Management</div>
+    <div><strong>Dataset:</strong> Steel Industry Energy Consumption Dataset (UCI / Sathishkumar et al.)</div>
+    <div><strong>Technology Stack:</strong> Python · scikit-learn · Streamlit · Plotly · pandas · NumPy</div>
+  </div>
+  <div class="cover-stats">
+    <div class="cover-stat"><div class="val">35,040</div><div class="lbl">Records</div></div>
+    <div class="cover-stat"><div class="val">15 min</div><div class="lbl">Interval</div></div>
+    <div class="cover-stat"><div class="val">3</div><div class="lbl">ML Models</div></div>
+    <div class="cover-stat"><div class="val">5-fold</div><div class="lbl">CV Bench</div></div>
+    <div class="cover-stat"><div class="val">99.7%</div><div class="lbl">Best R²</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DOCUMENT BODY
+════════════════════════════════════════════════════════════ -->
+<div class="doc">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc-page">
+    <div class="toc-title">Table of Contents</div>
+
+    <div class="toc-entry"><span><span class="toc-num">1</span>Problem Statement &amp; Objectives</span><span class="toc-pg">§1</span></div>
+    <div class="toc-entry"><span><span class="toc-num">2</span>Dataset Specifications</span><span class="toc-pg">§2</span></div>
+    <div class="toc-entry toc-sub"><span>2.1 Attribute Description</span><span class="toc-pg">§2</span></div>
+    <div class="toc-entry toc-sub"><span>2.2 Statistical Summary</span><span class="toc-pg">§2</span></div>
+    <div class="toc-entry"><span><span class="toc-num">3</span>System Architecture &amp; Project Structure</span><span class="toc-pg">§3</span></div>
+    <div class="toc-entry toc-sub"><span>3.1 Directory Layout</span><span class="toc-pg">§3</span></div>
+    <div class="toc-entry toc-sub"><span>3.2 Module Responsibilities</span><span class="toc-pg">§3</span></div>
+    <div class="toc-entry"><span><span class="toc-num">4</span>Implementation Workflow (5 Phases)</span><span class="toc-pg">§4</span></div>
+    <div class="toc-entry toc-sub"><span>4.1 Phase 1 – Temporal Feature Extraction</span><span class="toc-pg">§4</span></div>
+    <div class="toc-entry toc-sub"><span>4.2 Phase 2 – Feature Scaling &amp; Correlation</span><span class="toc-pg">§4</span></div>
+    <div class="toc-entry toc-sub"><span>4.3 Phase 3 – Regression Tree Training (Depth Sweep)</span><span class="toc-pg">§5</span></div>
+    <div class="toc-entry toc-sub"><span>4.4 Phase 4 – Step-Function Response Visualisation</span><span class="toc-pg">§5</span></div>
+    <div class="toc-entry toc-sub"><span>4.5 Phase 5 – Model Benchmarking (5-Fold CV)</span><span class="toc-pg">§5</span></div>
+    <div class="toc-entry"><span><span class="toc-num">5</span>Machine Learning Algorithms</span><span class="toc-pg">§6</span></div>
+    <div class="toc-entry toc-sub"><span>5.1 Decision Tree Regressor (CART)</span><span class="toc-pg">§6</span></div>
+    <div class="toc-entry toc-sub"><span>5.2 Multiple Linear Regression</span><span class="toc-pg">§6</span></div>
+    <div class="toc-entry toc-sub"><span>5.3 K-Nearest Neighbours Regressor</span><span class="toc-pg">§6</span></div>
+    <div class="toc-entry"><span><span class="toc-num">6</span>Experimental Results &amp; Analysis</span><span class="toc-pg">§7</span></div>
+    <div class="toc-entry toc-sub"><span>6.1 Correlation Analysis</span><span class="toc-pg">§7</span></div>
+    <div class="toc-entry toc-sub"><span>6.2 Depth Sweep Results</span><span class="toc-pg">§7</span></div>
+    <div class="toc-entry toc-sub"><span>6.3 Benchmark Comparison</span><span class="toc-pg">§7</span></div>
+    <div class="toc-entry toc-sub"><span>6.4 Evaluation Metrics Definitions</span><span class="toc-pg">§7</span></div>
+    <div class="toc-entry"><span><span class="toc-num">7</span>Frontend Dashboard</span><span class="toc-pg">§8</span></div>
+    <div class="toc-entry toc-sub"><span>7.1 Page Overview</span><span class="toc-pg">§8</span></div>
+    <div class="toc-entry toc-sub"><span>7.2 Running the Application</span><span class="toc-pg">§8</span></div>
+    <div class="toc-entry"><span><span class="toc-num">8</span>Key Findings &amp; Conclusions</span><span class="toc-pg">§9</span></div>
+    <div class="toc-entry"><span><span class="toc-num">9</span>References</span><span class="toc-pg">§9</span></div>
+  </div>
+
+
+  <!-- ─── SECTION 1 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">1. Problem Statement &amp; Objectives</h2>
+    <p>
+      Electrical utilities require accurate load forecasting to balance grid power generation,
+      prevent blackouts, and manage renewable energy integration. Industrial energy consumption
+      is driven by machine operating shifts, reactive power dynamics, power-factor penalties,
+      and ambient meteorological temperatures.
+    </p>
+    <p>
+      This project implements a full machine learning pipeline to forecast the active electrical
+      energy consumption (<strong>Usage_kWh</strong>) of a South Korean steel manufacturing
+      plant from 15-minute sensor readings. Three complementary regressors are compared:
+    </p>
+    <ul>
+      <li><strong>Decision Tree Regressor (CART)</strong> – captures non-linear, step-function relationships; depth regularised to prevent overfitting.</li>
+      <li><strong>Multiple Linear Regression (MLR)</strong> – linear baseline with interpretable coefficients.</li>
+      <li><strong>K-Nearest Neighbours Regressor (KNN)</strong> – instance-based, non-parametric approach.</li>
+    </ul>
+    <div class="info-box">
+      <strong>Core Learning Objectives:</strong> Non-linear regression surfaces · Decision Tree
+      step-function predictions vs continuous linear models · MSE splitting criterion ·
+      Tree depth regularisation · Evaluation metrics (MAE, RMSE, R², MAPE)
+    </div>
+  </div>
+
+
+  <!-- ─── SECTION 2 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">2. Dataset Specifications</h2>
+    <p>
+      <strong>Source:</strong> UCI Machine Learning Repository — Steel Industry Energy
+      Consumption Dataset (Sathishkumar V E et al., 2020).
+    </p>
+
+    <div class="metric-row">
+      <div class="metric-card"><div class="val">35,040</div><div class="lbl">Total Records</div></div>
+      <div class="metric-card"><div class="val">15 min</div><div class="lbl">Sampling Interval</div></div>
+      <div class="metric-card"><div class="val">10</div><div class="lbl">Raw Features</div></div>
+      <div class="metric-card"><div class="val">25</div><div class="lbl">After Encoding</div></div>
+      <div class="metric-card"><div class="val">0</div><div class="lbl">Missing Values</div></div>
+    </div>
+
+    <h3 class="sub-heading">2.1 Attribute Description</h3>
+    <table>
+      <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>date</td><td>DateTime</td><td>15-minute timestamp (DD/MM/YYYY HH:MM)</td></tr>
+        <tr><td>Usage_kWh</td><td>Float (Target)</td><td>Active energy consumption (kWh)</td></tr>
+        <tr><td>Lagging_Current_Reactive.Power_kVarh</td><td>Float</td><td>Lagging reactive power — dominant predictor (r = 0.896)</td></tr>
+        <tr><td>Leading_Current_Reactive_Power_kVarh</td><td>Float</td><td>Leading reactive power</td></tr>
+        <tr><td>CO2(tCO2)</td><td>Float</td><td>CO₂ emissions — highest correlation (r = 0.988)</td></tr>
+        <tr><td>Lagging_Current_Power_Factor</td><td>Float</td><td>Lagging power factor (0–100)</td></tr>
+        <tr><td>Leading_Current_Power_Factor</td><td>Float</td><td>Leading power factor (0–100)</td></tr>
+        <tr><td>NSM</td><td>Integer</td><td>Number of seconds since midnight (0–86,400)</td></tr>
+        <tr><td>WeekStatus</td><td>Categorical</td><td>Weekday / Weekend</td></tr>
+        <tr><td>Day_of_week</td><td>Categorical</td><td>Monday … Sunday</td></tr>
+        <tr><td>Load_Type</td><td>Categorical</td><td>Light Load / Medium Load / Maximum Load</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub-heading">2.2 Statistical Summary (Usage_kWh)</h3>
+    <table>
+      <thead><tr><th>Statistic</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Mean</td><td>31.22 kWh</td></tr>
+        <tr><td>Standard Deviation</td><td>37.54 kWh</td></tr>
+        <tr><td>Minimum</td><td>0.18 kWh</td></tr>
+        <tr><td>25th Percentile</td><td>3.09 kWh</td></tr>
+        <tr><td>Median</td><td>6.22 kWh</td></tr>
+        <tr><td>75th Percentile</td><td>60.83 kWh</td></tr>
+        <tr><td>Maximum</td><td>342.60 kWh</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ─── SECTION 3 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">3. System Architecture &amp; Project Structure</h2>
+
+    <h3 class="sub-heading">3.1 Directory Layout</h3>
+    <div class="code-block"><span class="cm">smart_grid_forecasting/</span>
+├── <span class="kw">app.py</span>               <span class="cm"># Streamlit frontend (7-page dashboard)</span>
+├── <span class="kw">requirements.txt</span>     <span class="cm"># Python dependencies</span>
+├── <span class="kw">data/</span>
+│   └── steel_industry_data.csv
+└── <span class="kw">src/</span>
+    ├── __init__.py
+    ├── <span class="kw">data_pipeline.py</span>    <span class="cm"># Loading · feature extraction · scaling</span>
+    └── <span class="kw">models.py</span>           <span class="cm"># DT · MLR · KNN · evaluation · benchmarking</span></div>
+
+    <h3 class="sub-heading">3.2 Module Responsibilities</h3>
+    <table>
+      <thead><tr><th>Module</th><th>Responsibility</th><th>Key Functions</th></tr></thead>
+      <tbody>
+        <tr><td>data_pipeline.py</td><td>Data I/O, feature engineering, scaling</td><td>load_data, extract_temporal_features, build_feature_matrix, scale_features, compute_correlations</td></tr>
+        <tr><td>models.py</td><td>ML training, evaluation, visualisation data</td><td>dt_depth_sweep, benchmark_models, step_function_response, evaluate, run_full_pipeline</td></tr>
+        <tr><td>app.py</td><td>Streamlit dashboard — 7 interactive pages</td><td>get_raw_data, get_features, get_pipeline (all @st.cache_data)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ─── SECTION 4 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">4. Implementation Workflow</h2>
+
+    <div class="workflow">
+      <div class="wf-step">
+        <div class="wf-left"><div class="wf-dot">1</div><div class="wf-line"></div></div>
+        <div class="wf-body">
+          <strong>Phase 1 – Temporal Feature Extraction</strong>
+          <p>Parse 15-minute timestamps → extract <code>hour</code>, <code>minute</code>, <code>day_of_week_num</code>,
+          <code>month</code>, and industrial <code>shift</code> (Morning 06–14 / Afternoon 14–22 / Night 22–06).
+          One-hot encode WeekStatus, Day_of_week, Load_Type, and shift labels.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-left"><div class="wf-dot">2</div><div class="wf-line"></div></div>
+        <div class="wf-body">
+          <strong>Phase 2 – Feature Scaling &amp; Correlation</strong>
+          <p>Compute Pearson correlations of all numeric + temporal features against Usage_kWh.
+          Apply <code>StandardScaler</code> fitted only on the training split (80%) to avoid
+          data leakage. CO₂ (r = 0.988) and Lagging Reactive Power (r = 0.896) are the two
+          dominant predictors.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-left"><div class="wf-dot">3</div><div class="wf-line"></div></div>
+        <div class="wf-body">
+          <strong>Phase 3 – Regression Tree Training (Depth Sweep 1→20)</strong>
+          <p>Train a <code>DecisionTreeRegressor</code> for every <code>max_depth</code> from 1 to 20.
+          Record training RMSE and 5-fold cross-validation RMSE. Plot both curves to identify
+          the bias–variance trade-off and select the depth that minimises CV RMSE.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-left"><div class="wf-dot">4</div><div class="wf-line"></div></div>
+        <div class="wf-body">
+          <strong>Phase 4 – Step-Function Response Visualisation</strong>
+          <p>Sort training samples by Lagging Reactive Power and predict with the optimal DT.
+          The resulting curve reveals the piecewise-constant (step-function) response surface.
+          Overlay the MLR linear response on the same axes for direct comparison.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-left"><div class="wf-dot">5</div><div class="wf-line"></div></div>
+        <div class="wf-body">
+          <strong>Phase 5 – Model Benchmarking (5-Fold CV)</strong>
+          <p>Evaluate all three models (DT at optimal depth, MLR, KNN with k=5) using
+          stratified 5-fold cross-validation on the training partition. Report MAE, RMSE, R²,
+          and MAPE for each model. Visualise results with side-by-side bar charts.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ─── SECTION 5 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">5. Machine Learning Algorithms</h2>
+
+    <h3 class="sub-heading">5.1 Decision Tree Regressor (CART)</h3>
+    <p>
+      CART (Classification and Regression Trees) recursively partitions the feature space
+      using binary splits that minimise the <strong>Mean Squared Error (MSE)</strong>
+      within each region. Each leaf stores the mean target value of its training samples,
+      producing piecewise-constant predictions.
+    </p>
+    <ul>
+      <li><strong>Splitting criterion:</strong> MSE minimisation</li>
+      <li><strong>Regularisation:</strong> <code>max_depth</code> sweep from 1 to 20 to control overfitting</li>
+      <li><strong>Advantages:</strong> Non-linear, no feature scaling required, interpretable rules</li>
+      <li><strong>Disadvantage:</strong> Prone to overfitting at large depths without regularisation</li>
+    </ul>
+
+    <h3 class="sub-heading">5.2 Multiple Linear Regression (MLR)</h3>
+    <p>
+      MLR estimates the best-fit hyperplane using Ordinary Least Squares (OLS).
+      It provides a smooth, continuous prediction surface and interpretable coefficients
+      but cannot capture non-linear interactions.
+    </p>
+    <ul>
+      <li><strong>Assumption:</strong> Linear relationship between features and target</li>
+      <li><strong>Role here:</strong> Linear baseline and MLR response surface comparison</li>
+    </ul>
+
+    <h3 class="sub-heading">5.3 K-Nearest Neighbours Regressor (KNN)</h3>
+    <p>
+      KNN predicts the target as the mean of the <em>k</em> nearest training points in
+      feature space (Euclidean distance after standardisation). It is non-parametric and
+      adapts locally to the data distribution.
+    </p>
+    <ul>
+      <li><strong>Hyper-parameter:</strong> k = 5 neighbours (default benchmark)</li>
+      <li><strong>Requirement:</strong> Feature standardisation is critical for distance-based methods</li>
+    </ul>
+  </div>
+
+
+  <!-- ─── SECTION 6 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">6. Experimental Results &amp; Analysis</h2>
+
+    <h3 class="sub-heading">6.1 Correlation Analysis</h3>
+    <div class="chart-wrap">
+      <div class="chart-title">Pearson Correlation with Usage_kWh (top features)</div>
+      <div class="bar-row"><div class="bar-label">CO₂ Emissions</div><div class="bar-track"><div class="bar-fill" style="width:98.8%;background:#1d4ed8">0.988</div></div></div>
+      <div class="bar-row"><div class="bar-label">Lagging React. Power</div><div class="bar-track"><div class="bar-fill" style="width:89.6%;background:#2563eb">0.896</div></div></div>
+      <div class="bar-row"><div class="bar-label">Lagging Power Factor</div><div class="bar-track"><div class="bar-fill" style="width:38.6%;background:#3b82f6">0.386</div></div></div>
+      <div class="bar-row"><div class="bar-label">Leading Power Factor</div><div class="bar-track"><div class="bar-fill" style="width:35.4%;background:#60a5fa">0.354</div></div></div>
+      <div class="bar-row"><div class="bar-label">Lead. React. Power</div><div class="bar-track"><div class="bar-fill" style="width:32.5%;background:#ef4444">-0.325</div></div></div>
+    </div>
+    <div class="warn-box">
+      CO₂ has the highest correlation (0.988) because it is a derived proxy metric
+      computed from active power consumption — not an independent predictor. Lagging
+      Reactive Power (0.896) is the most meaningful independent physical predictor.
+    </div>
+
+    <h3 class="sub-heading">6.2 Depth Sweep Results (selected depths)</h3>
+    <table>
+      <thead><tr><th>max_depth</th><th>Train RMSE</th><th>CV RMSE (5-fold)</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>16.31</td><td>16.31</td><td>High bias (underfitting)</td></tr>
+        <tr><td>3</td><td>4.72</td><td>4.73</td><td>Rapid improvement</td></tr>
+        <tr><td>5</td><td>3.63</td><td>3.73</td><td>Moderate complexity</td></tr>
+        <tr><td>10</td><td>2.03</td><td>2.42</td><td>Gap widening (overfitting starts)</td></tr>
+        <tr><td>15</td><td>0.65</td><td>1.73</td><td>Strong overfitting</td></tr>
+        <tr class="best"><td>20</td><td>0.13</td><td>1.65</td><td>Optimal CV RMSE on this dataset</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The CV RMSE continues to decrease through depth 20, indicating the dataset is large and
+      diverse enough that deeper trees still generalise. The train/CV gap grows from 0.02 at
+      depth 1 to 1.52 at depth 20 — the classic bias–variance trade-off is clearly visible
+      in the depth-sweep chart.
+    </p>
+
+    <h3 class="sub-heading">6.3 Benchmark Comparison (5-Fold CV on Training Set)</h3>
+    <table>
+      <thead><tr><th>Model</th><th>MAE</th><th>RMSE</th><th>R²</th><th>MAPE (%)</th></tr></thead>
+      <tbody>
+        <tr class="best">
+          <td>Decision Tree (depth=20)</td><td>0.668</td><td>1.645</td><td>0.9976</td><td>2.38%</td>
+        </tr>
+        <tr>
+          <td>Multiple Linear Regression</td><td>2.728</td><td>4.870</td><td>0.9791</td><td>20.14%</td>
+        </tr>
+        <tr>
+          <td>KNN (k=5)</td><td>2.667</td><td>5.276</td><td>0.9758</td><td>10.34%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub-heading">6.4 Evaluation Metrics Definitions</h3>
+    <table>
+      <thead><tr><th>Metric</th><th>Formula</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td>MAE</td><td>mean(|yᵢ − ŷᵢ|)</td><td>Average absolute error in kWh</td></tr>
+        <tr><td>RMSE</td><td>√mean((yᵢ − ŷᵢ)²)</td><td>Penalises large errors more than MAE</td></tr>
+        <tr><td>R²</td><td>1 − SS_res / SS_tot</td><td>Proportion of variance explained (1 = perfect)</td></tr>
+        <tr><td>MAPE</td><td>mean(|yᵢ − ŷᵢ| / |yᵢ|) × 100</td><td>Percentage error (excludes zero targets)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ─── SECTION 7 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">7. Frontend Dashboard</h2>
+
+    <h3 class="sub-heading">7.1 Page Overview</h3>
+    <table>
+      <thead><tr><th>#</th><th>Page</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>🏠 Overview</td><td>Dataset summary, statistics, missing values, load-type distribution pie chart</td></tr>
+        <tr><td>2</td><td>📊 EDA</td><td>Time-series plot, histogram, box plots by load type &amp; day, hourly consumption profile, scatter</td></tr>
+        <tr><td>3</td><td>⚙️ Preprocessing</td><td>Temporal features table, shift distribution, Pearson correlation bars, heatmap</td></tr>
+        <tr><td>4</td><td>🌳 Decision Tree</td><td>Depth sweep curve (train vs CV RMSE), optimal DT metrics cards, actual vs predicted overlay</td></tr>
+        <tr><td>5</td><td>📈 Step-Function</td><td>Piecewise-constant DT response curve vs MLR linear response on Lagging Reactive Power axis</td></tr>
+        <tr><td>6</td><td>🏆 Benchmarking</td><td>5-fold CV metrics table, RMSE / R² / MAE / MAPE bar charts, 3-model overlay predictions</td></tr>
+        <tr><td>7</td><td>🔮 Predict</td><td>Interactive form — enter sensor readings, get live forecasts from all 3 models</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="sub-heading">7.2 Running the Application</h3>
+    <div class="code-block"><span class="cm"># 1. Install dependencies</span>
+<span class="kw">pip3</span> install -r requirements.txt
+
+<span class="cm"># 2. Launch the Streamlit dashboard</span>
+<span class="kw">streamlit</span> run app.py
+
+<span class="cm"># Dashboard opens at http://localhost:8501</span></div>
+
+    <div class="success-box">
+      All results are <strong>cached with @st.cache_data</strong> — the full ML pipeline
+      (depth sweep + 5-fold CV + benchmarking) runs only once on first load and is
+      reused across all pages without re-computation.
+    </div>
+  </div>
+
+
+  <!-- ─── SECTION 8 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">8. Key Findings &amp; Conclusions</h2>
+    <ul>
+      <li>
+        <strong>Decision Tree outperforms both MLR and KNN</strong> by a wide margin on this
+        dataset (CV RMSE 1.645 vs 4.870 for MLR and 5.276 for KNN), achieving R² = 0.9976 —
+        demonstrating that industrial energy consumption has strong non-linear structure.
+      </li>
+      <li>
+        <strong>CO₂ and Lagging Reactive Power</strong> are the two dominant predictors with
+        Pearson r = 0.988 and 0.896 respectively, confirming the direct physical relationship
+        between reactive power dynamics and active energy draw.
+      </li>
+      <li>
+        <strong>The depth sweep clearly reveals the bias–variance trade-off:</strong> training
+        RMSE drops to 0.13 at depth 20 while CV RMSE stabilises around 1.65, showing a
+        train/test gap of ~12×. For more constrained deployments, depth 8–10 offers a better
+        balance (CV RMSE ≈ 2.4).
+      </li>
+      <li>
+        <strong>The step-function response surface</strong> shows that the DT captures rapid
+        non-linear jumps in consumption at specific reactive-power thresholds — a behaviour
+        that MLR's smooth linear surface cannot replicate.
+      </li>
+      <li>
+        <strong>KNN and MLR are competitive</strong> with each other (R² ≈ 0.976–0.979),
+        suggesting that once non-linearity is accounted for (KNN adapts locally), the residual
+        variance is comparable to a global linear fit.
+      </li>
+    </ul>
+  </div>
+
+
+  <!-- ─── SECTION 9 ─────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="sec-heading">9. References</h2>
+    <ol>
+      <li>Sathishkumar V E, Jangwoo Park, and Yongyun Cho. "Using Data Mining Techniques for Predicting Industrial Energy Consumption in Manufacturing Plants." <em>Journal of Cleaner Production</em>, 2021.</li>
+      <li>UCI Machine Learning Repository — Steel Industry Energy Consumption Dataset. <a href="https://archive.ics.uci.edu/dataset/851/steel+industry+energy+consumption">https://archive.ics.uci.edu/dataset/851/</a></li>
+      <li>Breiman, L., Friedman, J., Olshen, R., Stone, C. <em>Classification and Regression Trees</em>. Wadsworth, 1984.</li>
+      <li>scikit-learn Documentation — DecisionTreeRegressor, LinearRegression, KNeighborsRegressor. <a href="https://scikit-learn.org/stable/">https://scikit-learn.org/stable/</a></li>
+      <li>Streamlit Documentation. <a href="https://docs.streamlit.io">https://docs.streamlit.io</a></li>
+    </ol>
+  </div>
+
+</div><!-- /doc -->
+
+<div class="footer">
+  Made with IBM Bob
+</div>
+
+</body>
+</html>
