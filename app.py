@@ -67,7 +67,11 @@ st.markdown("""
 # ============================================================
 #  Data + model cache
 # ============================================================
-DATA_PATH = os.path.join(_HERE, "data", "steel_industry_data.csv")
+import joblib
+
+DATA_PATH  = os.path.join(_HERE, "data", "steel_industry_data.csv")
+# Streamlit Cloud has a writable /tmp directory — perfect for caching
+CACHE_PATH = "/tmp/smart_grid_pipeline.pkl"
 
 @st.cache_data(show_spinner="Loading dataset …")
 def get_raw_data():
@@ -77,8 +81,8 @@ def get_raw_data():
 def get_features(_df):
     return build_feature_matrix(_df)
 
-@st.cache_data(show_spinner="Running ML pipeline (this takes ~1 min on first run) …")
-def get_pipeline(_X, _y, _feature_names):
+def _build_pipeline(X, y, feat_names):
+    """Run the full ML pipeline and return the results dict."""
     from sklearn.model_selection import train_test_split
     from models import (
         dt_depth_sweep, best_dt_depth, train_decision_tree,
@@ -88,13 +92,13 @@ def get_pipeline(_X, _y, _feature_names):
     from sklearn.neighbors import KNeighborsRegressor
 
     X_train_raw, X_test_raw, y_train, y_test = train_test_split(
-        _X, _y, test_size=0.2, random_state=42, shuffle=False
+        X, y, test_size=0.2, random_state=42, shuffle=False
     )
     X_train_s, X_test_s, scaler = scale_features(X_train_raw, X_test_raw)
-    feat_list = list(_feature_names)
+    feat_list = list(feat_names)
 
     # Depth sweep & optimal DT
-    sweep_df = dt_depth_sweep(X_train_s, y_train, X_test_s, y_test)
+    sweep_df  = dt_depth_sweep(X_train_s, y_train, X_test_s, y_test)
     opt_depth = best_dt_depth(sweep_df)
     dt_model  = train_decision_tree(X_train_s, y_train, opt_depth)
     dt_preds  = dt_model.predict(X_test_s)
@@ -107,28 +111,52 @@ def get_pipeline(_X, _y, _feature_names):
     bench_df = benchmark_models(X_train_s, y_train, opt_depth)
 
     # MLR
-    mlr = LinearRegression().fit(X_train_s, y_train)
+    mlr       = LinearRegression().fit(X_train_s, y_train)
     mlr_preds = mlr.predict(X_test_s)
     mlr_metrics = evaluate(y_test, mlr_preds)
 
     # KNN
-    knn = KNeighborsRegressor(n_neighbors=5).fit(X_train_s, y_train)
+    knn       = KNeighborsRegressor(n_neighbors=5).fit(X_train_s, y_train)
     knn_preds = knn.predict(X_test_s)
     knn_metrics = evaluate(y_test, knn_preds)
 
     return {
-        "X_train": X_train_s, "X_test": X_test_s,
+        "X_train": X_train_s,   "X_test": X_test_s,
         "X_train_raw": X_train_raw,
-        "y_train": y_train, "y_test": y_test,
-        "sweep_df": sweep_df, "opt_depth": opt_depth,
-        "dt_model": dt_model, "dt_preds": dt_preds, "dt_metrics": dt_metrics,
-        "step_x": step_x, "step_y": step_y,
+        "y_train": y_train,     "y_test": y_test,
+        "sweep_df": sweep_df,   "opt_depth": opt_depth,
+        "dt_model": dt_model,   "dt_preds": dt_preds,   "dt_metrics": dt_metrics,
+        "step_x": step_x,       "step_y": step_y,
         "bench_df": bench_df,
-        "mlr_model": mlr, "mlr_preds": mlr_preds, "mlr_metrics": mlr_metrics,
-        "knn_model": knn, "knn_preds": knn_preds, "knn_metrics": knn_metrics,
+        "mlr_model": mlr,       "mlr_preds": mlr_preds, "mlr_metrics": mlr_metrics,
+        "knn_model": knn,       "knn_preds": knn_preds, "knn_metrics": knn_metrics,
         "feature_names": feat_list,
         "scaler": scaler,
     }
+
+
+def get_pipeline(X, y, feat_names):
+    """
+    Load pipeline from disk cache if available; otherwise train and save.
+    Uses /tmp (writable on Streamlit Cloud) so training only runs ONCE
+    per server lifetime — every restart after that is instant.
+    """
+    if os.path.exists(CACHE_PATH):
+        try:
+            return joblib.load(CACHE_PATH)
+        except Exception:
+            pass  # corrupt cache — retrain below
+
+    with st.spinner("⚙️ Training models for the first time … (~60 sec, cached after this)"):
+        result = _build_pipeline(X, y, feat_names)
+
+    try:
+        joblib.dump(result, CACHE_PATH, compress=3)
+    except Exception:
+        pass  # /tmp write failed — still works, just re-trains next restart
+
+    return result
+
 
 df_raw = get_raw_data()
 X, y, df_proc, feat_names = get_features(df_raw)
